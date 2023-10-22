@@ -15,7 +15,7 @@ The goal of this project is to implement an object detection system using YOLOv8
 ---
 
 # Install
-- Use this <a href='https://colab.research.google.com/drive/1aEwVlKoRYrpSlXgcDrEI9YBFL4Awaf7I?usp=sharing> Google Colab'</a> link to reach the code. 
+- Use this <a href="https://colab.research.google.com/drive/1aEwVlKoRYrpSlXgcDrEI9YBFL4Awaf7I?usp=sharing"> Google Colab'</a> link to reach the code. 
 - Install dependencies by running `pip3 install -r requirements.txt`
 
 ---
