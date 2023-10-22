@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Basireh</title>
+    <style>
+      body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background: linear-gradient(180deg, #FFF491 -7.54%, rgba(255, 195, 162, 0.494792) 49.78%, rgba(248, 231, 174, 0) 100%);
+
+        }
+        h1{
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+                    }
+        #container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        canvas {
+            display: block;
+            border: 1px solid black;
+            margin-top: 10px;
+        }
+        #sideText {
+            margin-top: 10px;
+            font-size: 30px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Basirah - Automated Baggage Scanner</h1>
+    <div id="status"></div>
+    <div id="items"></div>
+    <input id="uploadInput" type="file"/>
+    <canvas></canvas>
+    <script>
+      /**
+       * "Upload" button onClick handler: uploads selected image file
+       * to backend, receives array of detected objects
+       * and draws them on top of image
+       */
+       // List of prohibited labels
+       
+       const prohibitedLabels = [
+          'Handcuffs',
+          'knife',
+          'lighter',
+          'power bank',
+          'pressure',
+          'scissors',
+          'zippo oil',
+          'USB Flash Disk',
+          'battery',
+          'knife',
+          'lighter',
+          'plastic Bottle',
+          'pressure',
+          'scissors',
+          'seal',
+          'Gun',
+          'Knife',
+          'Pliers',
+          'Scissors',
+          'Wrench'
+        ];
+       const input = document.getElementById("uploadInput");
+       input.addEventListener("change",async(event) => {
+           const data = new FormData();
+           data.append("image_file",event.target.files[0],"image_file");
+           const response = await fetch("/detect",{
+               method:"post",
+               body:data
+           });
+           const boxes = await response.json();
+           draw_image_and_boxes(event.target.files[0],boxes);
+       })
+
+      /**
+       * Function draws the image from provided file
+       * and bounding boxes of detected objects on
+       * top of the image
+       * @param file Uploaded file object
+       * @param boxes Array of bounding boxes in format [[x1,y1,x2,y2,object_type,probability],...]
+       */
+       function draw_image_and_boxes(file, boxes) {
+        const img = new Image();
+        img.src = URL.createObjectURL(file);
+        img.onload = () => {
+            const canvas = document.querySelector("canvas");
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext("2d");
+            
+            // Clear the canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.drawImage(img, 0, 0);
+            ctx.strokeStyle = "#00FF00";
+            ctx.lineWidth = 3;
+            ctx.font = "18px serif";
+
+            const prohibitedItems = {};
+
+            boxes.forEach(([x1, y1, x2, y2, label]) => {
+                ctx.strokeRect(x1, y1, x2 - x1, y2 - y1);
+                ctx.fillStyle = "#00ff00";
+                const width = ctx.measureText(label).width;
+                ctx.fillRect(x1, y1, width + 10, 25);
+                ctx.fillStyle = "#000000";
+                ctx.fillText(label, x1, y1 + 18);
+
+                if (label !== "bag") {
+                    if (prohibitedItems[label]) {
+                        prohibitedItems[label]++;
+                    } else {
+                        prohibitedItems[label] = 1;
+                    }
+                }
+            });
+
+            // Remove previous sideTextElement if it exists
+            const sideTextElement = document.getElementById("sideText");
+            if (sideTextElement) {
+                sideTextElement.remove();
+            }
+
+            // Create a new sideTextElement
+            const newSideTextElement = document.createElement("div");
+            newSideTextElement.id = "sideText";
+            newSideTextElement.style.marginLeft = "10px";
+            document.body.appendChild(newSideTextElement);
+
+            let sideText = "This bag is: ";
+            sideText += boxes.some(([x1, y1, x2, y2, label]) => prohibitedLabels.includes(label))? "not allowed": "allowed";
+            sideText += "<br><br>Prohibited item(s):<br>";
+
+            Object.entries(prohibitedItems).forEach(([label, count]) => {
+                sideText += `Item name: ${label}, Number of times it appears: ${count}<br>`;
+            });
+
+            newSideTextElement.innerHTML = sideText;
+        };
+    }
+    </script>
+</body>
+</html>
