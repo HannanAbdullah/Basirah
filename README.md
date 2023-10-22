@@ -1,4 +1,4 @@
-# Basirah---Automated-Baggage-Scanning-System
+# Basirah-Automated Baggage Scanning System
 
 # Project Pref:
 Basirah is an automated baggage screening system that uses computer vision and deep learning to detect threats in luggage, improving security scans at airports and other facilities.
